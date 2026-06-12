@@ -1,0 +1,70 @@
+commodities:
+  - wheat
+  - maize
+  - corn
+  - barley
+  - sunflower seed
+  - rapeseed
+  - soybeans
+  - fertiliser
+
+exclude_terms:
+  - milk
+  - dairy
+  - cheese
+  - butter
+  - cream
+  - whey
+  - yogurt
+  - lactose
+  - casein
+  - milk powder
+  - dairy cattle
+  - dairy farms
+  - milk production
+
+regions:
+  - European Union
+  - Balkans
+  - Ukraine
+  - Romania
+  - Bulgaria
+  - Serbia
+  - North Macedonia
+  - Greece
+  - Turkey
+
+firecrawl_prompt: >
+  Act as an agriculture market intelligence analyst.
+  Extract only crop, oilseed, fertiliser, weather, production, trade,
+  logistics, export/import, and market-risk information.
+  Focus on wheat, maize, corn, barley, sunflower seed, rapeseed,
+  soybeans, and fertiliser.
+  Focus mainly on the Balkans, European Union, Ukraine, Romania,
+  Bulgaria, Serbia, North Macedonia, Greece, and Turkey.
+  For each result, extract commodity, country or region, date,
+  short summary, price impact, risk type, and business signal.
+  Strictly exclude milk, dairy, cheese, butter, cream, whey, yogurt,
+  lactose, casein, milk powder, dairy cattle, dairy farms,
+  and milk production.
+
+firecrawl_urls:
+  - https://agriculture.ec.europa.eu/news_en
+
+weather_regions:
+  - name: Romania
+    lat: 45.9432
+    lon: 24.9668
+    crop: wheat
+  - name: Bulgaria
+    lat: 42.7339
+    lon: 25.4858
+    crop: sunflower seed
+  - name: Serbia
+    lat: 44.0165
+    lon: 21.0059
+    crop: corn
+  - name: North Macedonia
+    lat: 41.6086
+    lon: 21.7453
+    crop: wheat

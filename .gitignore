@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Environment variables / secrets
+.env
+.env.local
+*.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# macOS
+.DS_Store
+
+# Reports / generated files
+*.xlsx
+*.xls
+reports/
+output/
+generated_reports/
+
+# Logs
+*.log
+
+#agri-intelligence-mvp.md
+agri-intelligence-mvp-*.md
