@@ -10,6 +10,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT_DIR / "config"
 DATA_DIR = ROOT_DIR / "data"
 REPORTS_DIR = ROOT_DIR / "reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_sources() -> dict:
