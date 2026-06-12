@@ -1,6 +1,8 @@
-requests
-pandas
-openpyxl
-python-dotenv
-pyyaml
 streamlit
+pandas
+requests
+openpyxl
+xlsxwriter
+python-dotenv
+altair
+pyyaml

@@ -286,13 +286,26 @@ if "weather_risk" in xls.sheet_names:
             if not counts.empty:
                 st.bar_chart(counts)
 
+# --- API key status warnings ---
+missing_keys = []
+if not get_env("USDA_NASS_API_KEY"):
+    missing_keys.append("USDA NASS (crop production data will be skipped)")
+if not get_env("FIRECRAWL_API_KEY"):
+    missing_keys.append("Firecrawl (market news will be skipped)")
+if not get_env("OPENWEATHER_API_KEY"):
+    missing_keys.append("OpenWeather (weather risk data will be skipped)")
+
+if missing_keys:
+    for key in missing_keys:
+        st.info(f"API key missing — {key}")
+
 # --- Diagnostics ---
 with st.expander("Diagnostics / Debug"):
     st.subheader("Environment variables detected")
     diag = {
-        "USDA_NASS_API_KEY configured": "yes" if get_env("USDA_NASS_API_KEY") else "no",
-        "FIRECRAWL_API_KEY configured": "yes" if get_env("FIRECRAWL_API_KEY") else "no",
-        "OPENWEATHER_API_KEY configured": "yes" if get_env("OPENWEATHER_API_KEY") else "no",
+        "USDA_NASS_API_KEY": "configured" if get_env("USDA_NASS_API_KEY") else "missing — source skipped",
+        "FIRECRAWL_API_KEY": "configured" if get_env("FIRECRAWL_API_KEY") else "missing — source skipped",
+        "OPENWEATHER_API_KEY": "configured" if get_env("OPENWEATHER_API_KEY") else "missing — source skipped",
     }
     st.json(diag)
 

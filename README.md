@@ -62,13 +62,32 @@ git push -u origin main
 
 **Do not commit `.env`** — it is in `.gitignore`. Only `.env.example` is tracked.
 
-## Deploy to Streamlit Community Cloud
+## Deploy on Streamlit Community Cloud
 
-1. Push to a public GitHub repo
-2. Go to https://streamlit.io/cloud
-3. Connect the repo
-4. Set secrets (FIRECRAWL_API_KEY, USDA_NASS_API_KEY, OPENWEATHER_API_KEY) in Streamlit Cloud dashboard
-5. Deploy
+1. Push the repo to GitHub:
+   ```bash
+   git push origin main
+   ```
+
+2. Go to [Streamlit Community Cloud](https://streamlit.io/cloud)
+
+3. Sign in with your GitHub account
+
+4. Click **Create app** and select:
+   - **Repository**: `shristovski/agri-intelligence-mvp`
+   - **Branch**: `main`
+   - **Main file path**: `app.py`
+
+5. Add secrets in **Streamlit Cloud Settings → Secrets**:
+   ```toml
+   USDA_NASS_API_KEY = "your_usda_nass_key_here"
+   FIRECRAWL_API_KEY = "your_firecrawl_key_here"
+   OPENWEATHER_API_KEY = "your_weather_key_here"
+   ```
+
+6. Click **Deploy**
+
+> **Note**: GitHub Pages cannot run Streamlit apps because Streamlit requires a running Python server.
 
 ## Excel sheets
 

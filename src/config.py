@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
+import streamlit as st
 import yaml
 from dotenv import load_dotenv
 
@@ -22,4 +23,7 @@ def load_env():
 
 
 def get_env(key: str, default: Optional[str] = None) -> Optional[str]:
-    return os.environ.get(key, default)
+    try:
+        return st.secrets.get(key, os.environ.get(key, default))
+    except Exception:
+        return os.environ.get(key, default)
