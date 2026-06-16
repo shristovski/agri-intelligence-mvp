@@ -7,6 +7,7 @@ import streamlit as st
 from src.config import REPORTS_DIR, ROOT_DIR, get_env, load_env
 
 load_env()
+from src.fdc_client import build_nutrition_table
 from src.main import run_pipeline
 
 st.set_page_config(page_title="Agri Market Intelligence MVP", layout="wide")
@@ -153,6 +154,7 @@ if generate:
         st.sidebar.error("Dairy and milk-related content is excluded from this MVP.")
         st.stop()
 
+    nutrition_queries = st.session_state.get("nutrition_queries", [])
     with st.spinner("Running pipeline..."):
         try:
             result = run_pipeline(
@@ -161,11 +163,38 @@ if generate:
                 region_filter=region,
                 time_range=time_range,
                 custom_prompt=custom_prompt,
+                nutrition_queries=nutrition_queries,
             )
             st.sidebar.success(f"Report saved: {Path(result['report_path']).name}")
             st.rerun()
         except Exception as e:
             st.sidebar.error(f"Pipeline failed: {e}")
+
+# --- FDC Nutrition Intelligence ---
+st.sidebar.header("Food / Commodity Nutrition Intelligence")
+
+default_fdc = "wheat, corn, rice, soybean, potato, apple"
+fdc_input = st.sidebar.text_input(
+    "Commodities (comma-separated)",
+    value=st.session_state.get("fdc_input", default_fdc),
+)
+
+if st.sidebar.button("Generate nutrition intelligence", type="secondary"):
+    fdc_key = get_env("FDC_API_KEY")
+    if not fdc_key:
+        st.sidebar.warning("FDC_API_KEY missing — add it to use FoodData Central.")
+    else:
+        commodities_list = [c.strip() for c in fdc_input.split(",") if c.strip()]
+        with st.spinner("Fetching nutrition data from USDA FoodData Central..."):
+            try:
+                nutrition_df = build_nutrition_table(commodities_list, page_size=3)
+                st.session_state["nutrition_df"] = nutrition_df
+                st.session_state["nutrition_queries"] = commodities_list
+                st.session_state["fdc_input"] = fdc_input
+                st.sidebar.success(f"Nutrition data loaded for {len(commodities_list)} commodities")
+                st.rerun()
+            except Exception as e:
+                st.sidebar.error(f"FDC fetch failed: {e}")
 
 # --- Report selection ---
 reports = list_reports()
@@ -286,6 +315,19 @@ if "weather_risk" in xls.sheet_names:
             if not counts.empty:
                 st.bar_chart(counts)
 
+# --- Nutrition intelligence display ---
+if "nutrition_df" in st.session_state and not st.session_state["nutrition_df"].empty:
+    st.subheader("Food / Commodity Nutrition Intelligence")
+    st.dataframe(st.session_state["nutrition_df"], width="stretch")
+
+    csv_bytes = st.session_state["nutrition_df"].to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download nutrition data as CSV",
+        data=csv_bytes,
+        file_name="nutrition_fdc.csv",
+        mime="text/csv",
+    )
+
 # --- API key status warnings ---
 missing_keys = []
 if not get_env("USDA_NASS_API_KEY"):
@@ -294,6 +336,8 @@ if not get_env("FIRECRAWL_API_KEY"):
     missing_keys.append("Firecrawl (market news will be skipped)")
 if not get_env("OPENWEATHER_API_KEY"):
     missing_keys.append("OpenWeather (weather risk data will be skipped)")
+if not get_env("FDC_API_KEY"):
+    missing_keys.append("FDC (nutrition intelligence will be skipped)")
 
 if missing_keys:
     for key in missing_keys:
@@ -306,6 +350,7 @@ with st.expander("Diagnostics / Debug"):
         "USDA_NASS_API_KEY": "configured" if get_env("USDA_NASS_API_KEY") else "missing — source skipped",
         "FIRECRAWL_API_KEY": "configured" if get_env("FIRECRAWL_API_KEY") else "missing — source skipped",
         "OPENWEATHER_API_KEY": "configured" if get_env("OPENWEATHER_API_KEY") else "missing — source skipped",
+        "FDC_API_KEY": "configured" if get_env("FDC_API_KEY") else "missing — source skipped",
     }
     st.json(diag)
 

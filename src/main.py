@@ -5,6 +5,7 @@ import pandas as pd
 from src.config import get_env, load_env, load_sources
 from src.excel_report import write_excel_report
 from src.faostat import fetch_faostat_url, normalize_faostat_production
+from src.fdc_client import build_nutrition_table
 from src.filters import filter_out_excluded_rows
 from src.firecrawl_news import extract_market_news
 from src.eu_agridata import fetch_eu_dataset, normalize_eu_prices
@@ -27,6 +28,7 @@ def run_pipeline(
     region_filter: str = "",
     time_range: str = "Last 12 months",
     custom_prompt: str = "",
+    nutrition_queries: Optional[list[str]] = None,
 ) -> dict:
     load_env()
     config = load_sources()
@@ -53,6 +55,7 @@ def run_pipeline(
     prices_df = pd.DataFrame()
     trade_flows_df = pd.DataFrame()
     signals_df = pd.DataFrame()
+    nutrition_df = pd.DataFrame()
 
     sheet_statuses = {}
     actual_period = selected_year
@@ -126,7 +129,20 @@ def run_pipeline(
     else:
         sheet_statuses["trade_flows"] = _sheet_status(0, "FAOSTAT", "not requested for this report type")
 
-    # 6. Signals
+    # 6. FDC nutrition
+    if nutrition_queries:
+        has_key = bool(get_env("FDC_API_KEY"))
+        if not has_key:
+            sheet_statuses["nutrition_fdc"] = _sheet_status(0, "USDA FoodData Central", "API key missing")
+        else:
+            nutrition_df = build_nutrition_table(nutrition_queries, page_size=3)
+            n = len(nutrition_df)
+            sheet_statuses["nutrition_fdc"] = _sheet_status(n, "USDA FoodData Central")
+            print(f"       nutrition_fdc — USDA FoodData Central — {n} rows")
+    else:
+        sheet_statuses["nutrition_fdc"] = _sheet_status(0, "USDA FoodData Central", "not requested")
+
+    # 7. Signals
     signals_df = create_market_signals(news_df, weather_df, prices_df)
     signals_df = filter_out_excluded_rows(
         signals_df, ["commodity", "region", "reason"], exclude_terms
@@ -144,6 +160,7 @@ def run_pipeline(
         weather_df=weather_df,
         news_df=news_df,
         signals_df=signals_df,
+        nutrition_df=nutrition_df,
         commodities=commodities,
         exclude_terms=exclude_terms,
         report_type=report_type,

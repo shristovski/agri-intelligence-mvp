@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 import pandas as pd
 
@@ -18,6 +19,7 @@ def write_excel_report(
     signals_df: pd.DataFrame,
     commodities: list[str],
     exclude_terms: list[str],
+    nutrition_df: Optional[pd.DataFrame] = None,
     report_type: str = "full",
     commodity_filter: str = "",
     region_filter: str = "",
@@ -76,6 +78,8 @@ def write_excel_report(
         weather_df.to_excel(writer, sheet_name="weather_risk", index=False)
         news_df.to_excel(writer, sheet_name="market_news", index=False)
         signals_df.to_excel(writer, sheet_name="signals", index=False)
+        if nutrition_df is not None and not nutrition_df.empty:
+            nutrition_df.to_excel(writer, sheet_name="nutrition_fdc", index=False)
 
         meta = pd.DataFrame([
             ("generated_at", now.isoformat()),

@@ -27,11 +27,14 @@ cp .env.example .env
 
 All API keys are optional — the app runs with missing keys (returns empty data with warnings).
 
+`FDC_API_KEY` provides food composition and nutrition intelligence (not commodity prices).
+
 | Key | Source | Optional |
-|---|---|---|
+|---|---|---|---|
 | `FIRECRAWL_API_KEY` | [Firecrawl](https://www.firecrawl.dev/) | Yes |
 | `USDA_NASS_API_KEY` | [USDA NASS](https://quickstats.nass.usda.gov/api) | Yes |
 | `OPENWEATHER_API_KEY` | [OpenWeather](https://openweathermap.org/api) | Yes |
+| `FDC_API_KEY` | [USDA FoodData Central](https://fdc.nal.usda.gov) | Yes |
 
 ## Run pipeline
 
@@ -83,6 +86,7 @@ git push -u origin main
    USDA_NASS_API_KEY = "your_usda_nass_key_here"
    FIRECRAWL_API_KEY = "your_firecrawl_key_here"
    OPENWEATHER_API_KEY = "your_weather_key_here"
+   FDC_API_KEY = "your_fooddata_central_key_here"
    ```
 
 6. Click **Deploy**
@@ -99,6 +103,7 @@ git push -u origin main
 | `weather_risk` | Weather risk assessment per region |
 | `market_news` | Crop market news from Firecrawl extraction |
 | `signals` | Generated market signals from news + weather |
+| `nutrition_fdc` | Food / commodity nutrition composition from USDA FoodData Central |
 | `readme` | Report metadata |
 
 ## Next improvements
