@@ -308,7 +308,7 @@ if "market_news" in xls.sheet_names:
                 st.write(f"**Price impact:** {row.get('price_impact', '')}  ")
                 st.write(f"**Risk type:** {row.get('risk_type', '')}")
 
-        has_debug = any(k.startswith("news_") for k in summary_rows)
+        has_debug = any(isinstance(k, str) and k.startswith("news_") for k in summary_rows)
         if has_debug:
             with st.expander("Market news debug"):
                 news_debug_display = {}
