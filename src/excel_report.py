@@ -20,6 +20,7 @@ def write_excel_report(
     commodities: list[str],
     exclude_terms: list[str],
     nutrition_df: Optional[pd.DataFrame] = None,
+    news_debug: Optional[dict] = None,
     report_type: str = "full",
     commodity_filter: str = "",
     region_filter: str = "",
@@ -60,6 +61,20 @@ def write_excel_report(
                 name,
                 f"{st.get('source', '')} — {st.get('rows', 0)} rows — {st.get('status', '')}",
             ))
+
+        if news_debug:
+            summary_rows += [
+                ("", ""),
+                ("News debug", ""),
+                ("news_selected_region", news_debug.get("region", "")),
+                ("news_selected_commodity", news_debug.get("commodity", "")),
+                ("news_time_range", news_debug.get("time_range", "")),
+                ("news_urls_used", ", ".join(news_debug.get("urls_used", []))),
+                ("news_prompt_used", news_debug.get("prompt_used", "")),
+                ("news_count_before_filter", str(news_debug.get("count_before", 0))),
+                ("news_count_after_filter", str(news_debug.get("count_after", 0))),
+                ("news_filtered_out", str(news_debug.get("count_before", 0) - news_debug.get("count_after", 0))),
+            ]
 
         summary_rows += [
             ("", ""),

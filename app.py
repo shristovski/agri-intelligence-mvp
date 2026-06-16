@@ -294,8 +294,12 @@ if "signals" in xls.sheet_names:
 # --- Market news cards ---
 if "market_news" in xls.sheet_names:
     news_df = pd.read_excel(selected_report_path, sheet_name="market_news")
+    news_count_after = int(summary_rows.get("news_count_after_filter", "0") or "0")
     if not news_df.empty:
         st.subheader("Market news")
+        st.caption("Source: Firecrawl web extraction")
+        if news_count_after == 0 and not news_df.empty:
+            st.info("No highly relevant market news found for this commodity/region/time range. Showing broader global agriculture news instead.")
         for _, row in news_df.iterrows():
             with st.expander(row.get("title", "")):
                 st.write(f"**Summary:** {row.get('summary', '')}")
@@ -303,6 +307,20 @@ if "market_news" in xls.sheet_names:
                 st.write(f"**Region:** {row.get('country_or_region', '')}  ")
                 st.write(f"**Price impact:** {row.get('price_impact', '')}  ")
                 st.write(f"**Risk type:** {row.get('risk_type', '')}")
+
+        has_debug = any(k.startswith("news_") for k in summary_rows)
+        if has_debug:
+            with st.expander("Market news debug"):
+                news_debug_display = {}
+                for key in [
+                    "news_selected_region", "news_selected_commodity", "news_time_range",
+                    "news_urls_used", "news_prompt_used",
+                    "news_count_before_filter", "news_count_after_filter", "news_filtered_out",
+                ]:
+                    if key in summary_rows:
+                        label = key.replace("news_", "").replace("_", " ").title()
+                        news_debug_display[label] = summary_rows[key]
+                st.json(news_debug_display)
 
 # --- Weather risk ---
 if "weather_risk" in xls.sheet_names:

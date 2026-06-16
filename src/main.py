@@ -7,7 +7,12 @@ from src.excel_report import write_excel_report
 from src.faostat import fetch_faostat_url, normalize_faostat_production
 from src.fdc_client import build_nutrition_table
 from src.filters import filter_out_excluded_rows
-from src.firecrawl_news import extract_market_news
+from src.firecrawl_news import (
+    build_context_prompt,
+    extract_market_news,
+    filter_by_relevance,
+    resolve_urls,
+)
 from src.eu_agridata import fetch_eu_dataset, normalize_eu_prices
 from src.signals import create_market_signals
 from src.usda_nass import fetch_nass_production
@@ -35,8 +40,6 @@ def run_pipeline(
 
     commodities = config.get("commodities", [])
     exclude_terms = config.get("exclude_terms", [])
-    firecrawl_urls = config.get("firecrawl_urls", [])
-    firecrawl_prompt = custom_prompt or config.get("firecrawl_prompt", "")
     weather_regions = config.get("weather_regions", [])
 
     selected_year = _resolve_year(time_range)
@@ -80,19 +83,36 @@ def run_pipeline(
     else:
         sheet_statuses["production"] = _sheet_status(0, "USDA NASS", "not requested for this report type")
 
-    # 2. Firecrawl market news
+    # 2. Firecrawl market news (region-aware)
+    news_debug = {}
     if is_full or is_news or is_fertiliser:
         has_key = bool(get_env("FIRECRAWL_API_KEY"))
         if not has_key:
             sheet_statuses["market_news"] = _sheet_status(0, "Firecrawl", "API key missing")
             print("       market_news — Firecrawl — API key missing — skipped")
-        elif not firecrawl_urls:
-            sheet_statuses["market_news"] = _sheet_status(0, "Firecrawl", "no URLs configured")
         else:
-            news_df = extract_market_news(firecrawl_urls, prompt=firecrawl_prompt)
+            resolved_region = region_filter if region_filter and region_filter != "custom" else "Global"
+            urls = resolve_urls(resolved_region)
+            context_prompt = custom_prompt or build_context_prompt(resolved_region, commodity_filter or "all", time_range)
+            news_debug = {
+                "region": resolved_region,
+                "commodity": commodity_filter or "all",
+                "time_range": time_range,
+                "urls_used": urls,
+                "prompt_used": context_prompt,
+            }
+            news_df = extract_market_news(urls, prompt=context_prompt)
             news_df = filter_out_excluded_rows(
                 news_df, ["title", "summary", "commodity"], exclude_terms
             )
+            news_df, count_before, count_after = filter_by_relevance(news_df, resolved_region, commodity_filter or "all")
+            news_debug["count_before"] = count_before
+            news_debug["count_after"] = count_after
+            if count_after == 0 and not news_df.empty:
+                print("       No highly relevant results — falling back to broader global news")
+                news_df = filter_out_excluded_rows(
+                    news_df, ["title", "summary", "commodity"], exclude_terms
+                )
             n = len(news_df)
             sheet_statuses["market_news"] = _sheet_status(n, "Firecrawl")
             print(f"       market_news — Firecrawl — {n} rows — {sheet_statuses['market_news']['status']}")
@@ -161,6 +181,7 @@ def run_pipeline(
         news_df=news_df,
         signals_df=signals_df,
         nutrition_df=nutrition_df,
+        news_debug=news_debug,
         commodities=commodities,
         exclude_terms=exclude_terms,
         report_type=report_type,
@@ -179,6 +200,7 @@ def run_pipeline(
         "selected_period": selected_year,
         "actual_period": actual_period,
         "sheets": sheet_statuses,
+        "news_debug": news_debug,
     }
 
 
